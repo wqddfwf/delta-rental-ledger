@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>三角洲行动帐号出租记账系统</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">D</div>
+          <div>
+            <h1>三角洲出租账本</h1>
+            <p>帐号库存 · 订单 · 租客</p>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" aria-label="主导航">
+          <button class="nav-tab active" data-view="dashboard">总览</button>
+          <button class="nav-tab" data-view="accounts">帐号库存</button>
+          <button class="nav-tab" data-view="orders">出租订单</button>
+          <button class="nav-tab" data-view="renters">租客管理</button>
+          <button class="nav-tab" data-view="sync">GitHub 云端</button>
+        </nav>
+
+        <div class="sync-card">
+          <span class="sync-dot" id="syncDot"></span>
+          <div>
+            <strong id="syncStatus">本地已就绪</strong>
+            <p id="syncMeta">数据自动保存到浏览器</p>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Delta Force Rental Ledger</p>
+            <h2 id="viewTitle">经营总览</h2>
+          </div>
+          <div class="top-actions">
+            <button class="ghost-btn" id="exportBtn" type="button">导出 JSON</button>
+            <button class="ghost-btn" id="importBtn" type="button">导入 JSON</button>
+            <button class="primary-btn" id="quickAddOrderBtn" type="button">新增订单</button>
+          </div>
+        </header>
+
+        <section class="view active" id="dashboardView" data-title="经营总览">
+          <div class="metric-grid">
+            <div class="metric">
+              <span>总净利润</span>
+              <strong id="metricProfit">¥0.00</strong>
+            </div>
+            <div class="metric">
+              <span>可出租帐号</span>
+              <strong id="metricAvailable">0</strong>
+            </div>
+            <div class="metric">
+              <span>进行中订单</span>
+              <strong id="metricActiveOrders">0</strong>
+            </div>
+            <div class="metric">
+              <span>租客数量</span>
+              <strong id="metricRenters">0</strong>
+            </div>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <h3>最近订单</h3>
+                <button class="text-btn" data-view-link="orders" type="button">查看全部</button>
+              </div>
+              <div class="table-wrap compact">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>订单ID</th>
+                      <th>租客</th>
+                      <th>游戏</th>
+                      <th>净利润</th>
+                      <th>状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recentOrdersBody"></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h3>帐号状态</h3>
+                <button class="text-btn" data-view-link="accounts" type="button">管理库存</button>
+              </div>
+              <div class="status-list" id="accountStatusList"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="accountsView" data-title="帐号库存管理">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>帐号库存管理</h3>
+                <p>帐号ID、游戏名称、出租状态、累计收益</p>
+              </div>
+              <div class="inline-actions">
+                <input class="search-input" id="accountSearch" type="search" placeholder="搜索帐号或游戏" />
+                <button class="primary-btn" id="addAccountBtn" type="button">新增帐号</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>帐号ID</th>
+                    <th>游戏名称</th>
+                    <th>状态</th>
+                    <th>累计收益</th>
+                    <th class="actions-col">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="accountsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="ordersView" data-title="出租订单管理">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>出租订单管理</h3>
+                <p>订单ID自动按日期生成，纯利润自动扣除 1.3% 平台费用</p>
+              </div>
+              <div class="inline-actions">
+                <select class="select-input" id="orderStatusFilter">
+                  <option value="all">全部状态</option>
+                  <option value="进行中">进行中</option>
+                  <option value="已结束">已结束</option>
+                </select>
+                <input class="search-input" id="orderSearch" type="search" placeholder="搜索订单、租客、游戏" />
+                <button class="primary-btn" id="addOrderBtn" type="button">新增订单</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="wide-table">
+                <thead>
+                  <tr>
+                    <th>订单ID</th>
+                    <th>帐号</th>
+                    <th>游戏名称</th>
+                    <th>租客</th>
+                    <th>价格</th>
+                    <th>哈夫币数量</th>
+                    <th>出租天数</th>
+                    <th>实收金额</th>
+                    <th>押金</th>
+                    <th>纯利润</th>
+                    <th>状态</th>
+                    <th class="actions-col">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="rentersView" data-title="租客管理">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>租客管理</h3>
+                <p>租赁次数、消费金额、新客/回头客程度标记</p>
+              </div>
+              <div class="inline-actions">
+                <input class="search-input" id="renterSearch" type="search" placeholder="搜索租客" />
+                <button class="primary-btn" id="addRenterBtn" type="button">新增租客</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>租客名称</th>
+                    <th>租赁次数</th>
+                    <th>消费金额</th>
+                    <th>标记</th>
+                    <th>备注</th>
+                    <th class="actions-col">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rentersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="syncView" data-title="GitHub 云端数据">
+          <div class="sync-layout">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h3>GitHub 同步设置</h3>
+                  <p>数据文件通过 GitHub Contents API 读取和写入</p>
+                </div>
+              </div>
+              <form class="form-grid sync-form" id="syncForm">
+                <label>
+                  GitHub 用户名 / 组织
+                  <input id="githubOwner" autocomplete="off" placeholder="例如 your-name" />
+                </label>
+                <label>
+                  仓库名
+                  <input id="githubRepo" autocomplete="off" placeholder="例如 delta-rental-ledger" />
+                </label>
+                <label>
+                  分支
+                  <input id="githubBranch" autocomplete="off" placeholder="main" />
+                </label>
+                <label>
+                  数据文件路径
+                  <input id="githubPath" autocomplete="off" placeholder="data/ledger-data.json" />
+                </label>
+                <label class="wide">
+                  Fine-grained Token
+                  <input id="githubToken" type="password" autocomplete="off" placeholder="Contents: Read and write" />
+                </label>
+                <div class="wide button-row">
+                  <button class="primary-btn" type="submit">保存同步设置</button>
+                  <button class="ghost-btn" id="loadCloudBtn" type="button">从 GitHub 读取</button>
+                  <button class="accent-btn" id="saveCloudBtn" type="button">保存到 GitHub</button>
+                  <button class="danger-link" id="clearTokenBtn" type="button">清除令牌</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h3>同步记录</h3>
+              </div>
+              <div class="log-box" id="syncLog"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <dialog class="modal" id="accountDialog">
+      <form method="dialog" class="modal-body" id="accountForm">
+        <div class="modal-head">
+          <h3 id="accountDialogTitle">新增帐号</h3>
+          <button class="icon-btn" data-close-dialog type="button" aria-label="关闭">×</button>
+        </div>
+        <input type="hidden" id="accountInternalId" />
+        <label>
+          帐号ID
+          <input id="accountIdInput" required autocomplete="off" />
+        </label>
+        <label>
+          游戏名称
+          <input id="accountGameInput" required autocomplete="off" value="三角洲行动" />
+        </label>
+        <label>
+          状态
+          <select id="accountStatusInput" required>
+            <option value="正在生产">正在生产</option>
+            <option value="可出租">可出租</option>
+            <option value="正在出租">正在出租</option>
+            <option value="下架停租">下架停租</option>
+          </select>
+        </label>
+        <div class="button-row end">
+          <button class="ghost-btn" data-close-dialog type="button">取消</button>
+          <button class="primary-btn" id="saveAccountBtn" value="default" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal wide-modal" id="orderDialog">
+      <form method="dialog" class="modal-body" id="orderForm">
+        <div class="modal-head">
+          <h3 id="orderDialogTitle">新增订单</h3>
+          <button class="icon-btn" data-close-dialog type="button" aria-label="关闭">×</button>
+        </div>
+        <input type="hidden" id="orderInternalId" />
+        <div class="form-grid">
+          <label>
+            订单ID
+            <input id="orderIdInput" required autocomplete="off" />
+          </label>
+          <label>
+            关联帐号
+            <select id="orderAccountInput"></select>
+          </label>
+          <label>
+            游戏名称
+            <input id="orderGameInput" required autocomplete="off" value="三角洲行动" />
+          </label>
+          <label>
+            租客
+            <input id="orderRenterInput" required autocomplete="off" list="renterNameList" />
+          </label>
+          <label>
+            价格
+            <input id="orderPriceInput" required inputmode="decimal" min="0" step="0.01" type="number" />
+          </label>
+          <label>
+            哈夫币数量
+            <div class="compound-input">
+              <input id="orderCoinAmountInput" inputmode="decimal" min="0" step="0.01" type="number" />
+              <select id="orderCoinUnitInput">
+                <option value="W">W</option>
+                <option value="M">M</option>
+              </select>
+            </div>
+          </label>
+          <label>
+            出租时长天数
+            <input id="orderDaysInput" required inputmode="decimal" min="0" step="0.5" type="number" />
+          </label>
+          <label>
+            实收金额
+            <input id="orderReceivedInput" required inputmode="decimal" min="0" step="0.01" type="number" />
+          </label>
+          <label>
+            押金
+            <input id="orderDepositInput" inputmode="decimal" min="0" step="0.01" type="number" />
+          </label>
+          <label>
+            状态
+            <select id="orderStatusInput" required>
+              <option value="进行中">进行中</option>
+              <option value="已结束">已结束</option>
+            </select>
+          </label>
+          <label class="wide readonly-field">
+            纯利润
+            <output id="orderProfitPreview">¥0.00</output>
+          </label>
+        </div>
+        <div class="button-row end">
+          <button class="ghost-btn" data-close-dialog type="button">取消</button>
+          <button class="primary-btn" id="saveOrderBtn" value="default" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="renterDialog">
+      <form method="dialog" class="modal-body" id="renterForm">
+        <div class="modal-head">
+          <h3 id="renterDialogTitle">新增租客</h3>
+          <button class="icon-btn" data-close-dialog type="button" aria-label="关闭">×</button>
+        </div>
+        <input type="hidden" id="renterInternalId" />
+        <label>
+          租客名称
+          <input id="renterNameInput" required autocomplete="off" />
+        </label>
+        <label>
+          备注
+          <textarea id="renterNoteInput" rows="3"></textarea>
+        </label>
+        <div class="button-row end">
+          <button class="ghost-btn" data-close-dialog type="button">取消</button>
+          <button class="primary-btn" id="saveRenterBtn" value="default" type="submit">保存</button>
+        </div>
+      </form>
+    </dialog>
+
+    <datalist id="renterNameList"></datalist>
+    <input class="hidden-file" id="importFileInput" type="file" accept="application/json,.json" />
+
+    <div class="toast-host" id="toastHost"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
