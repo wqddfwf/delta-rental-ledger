@@ -1,6 +1,6 @@
 const STORAGE_KEY = "deltaRentalLedger.v1";
 const GITHUB_KEY = "deltaRentalLedger.github.v1";
-const PLATFORM_FEE_RATE = 0.016;
+const PLATFORM_FEE_RATE = 0.01;
 
 const accountStatuses = ["正在生产", "可出租", "正在出租", "下架停租"];
 
